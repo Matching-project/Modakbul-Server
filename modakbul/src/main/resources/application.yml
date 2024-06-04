@@ -1,9 +1,14 @@
 spring:
-  spring:
-    application:
-      name: modakbul
+  application:
+    name: modakbul
   datasource:
-    driver-class-name:
-    url:
-    username:
-    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/modakbul?useSSL=false&serverTimezone=UTC
+    username: root
+    password: rlaehdnr1!
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
