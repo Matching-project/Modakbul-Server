@@ -1,5 +1,6 @@
 package com.modakbul.domain.notification.repository;
 
+import com.modakbul.domain.board.entity.Board;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,4 +20,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
 	void deleteAllBySender(User user);
 	void deleteAllByReceiver(User user);
+
+	void deleteAllByBoard(Board board);
 }

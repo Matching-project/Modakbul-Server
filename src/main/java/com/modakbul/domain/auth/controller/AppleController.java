@@ -9,6 +9,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,25 +32,26 @@ public class AppleController {
 
 	@PostMapping("/users/login/apple")
 	public ResponseEntity<BaseResponse<AuthResDto>> login(@RequestBody AppleLoginReqDto request) throws
-		IOException,
-		InvalidKeySpecException,
-		NoSuchAlgorithmException {
+			IOException,
+			InvalidKeySpecException,
+			NoSuchAlgorithmException {
 		return appleService.login(request);
 	}
 
 	@PostMapping("/users/register/apple")
 	public ResponseEntity<BaseResponse<AuthResDto>> signUp(
-		@RequestPart(value = "image", required = false) MultipartFile image,
-		@RequestPart(value = "user") AppleSignUpReqDto request) throws
-		IOException,
-		InvalidKeySpecException,
-		NoSuchAlgorithmException {
+			@RequestPart(value = "image", required = false) MultipartFile image,
+			@RequestPart(value = "user") AppleSignUpReqDto request) throws
+			IOException,
+			InvalidKeySpecException,
+			NoSuchAlgorithmException {
 		return appleService.signUp(image, request);
 	}
 
 	@DeleteMapping("/users/withdrawal/apple")
-	public BaseResponse<Void> withdrawal(@AuthenticationPrincipal User user) throws IOException {
-		appleService.withdrawal(user);
+	public BaseResponse<Void> withdrawal(@AuthenticationPrincipal User user,
+										 @RequestHeader("Authorization") String accessToken) throws IOException {
+		appleService.withdrawal(user, accessToken);
 		return new BaseResponse<>(BaseResponseStatus.WITHDRAWAL_SUCCESS);
 	}
 }

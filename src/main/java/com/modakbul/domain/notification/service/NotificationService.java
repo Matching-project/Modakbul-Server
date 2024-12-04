@@ -56,6 +56,8 @@ public class NotificationService {
 				.setNotification(fcmDto.toNotification())
 				.putData("type", notificationDto.getType())
 				.putData("boardId", String.valueOf(notificationDto.getBoardId()))
+				//.putData("sound", "bingbong.aiff")
+				//.putData("badge", "1")
 				.build();
 		firebaseMessaging.send(message);
 

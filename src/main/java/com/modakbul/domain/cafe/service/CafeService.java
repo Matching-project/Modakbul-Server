@@ -65,7 +65,7 @@ public class CafeService {
 	}
 
 	public List<CafeListResDto> searchCafeList(String cafeName, double latitude, double longitude) {
-		List<Cafe> findCafes = cafeRepository.findAllByDistance(latitude, longitude);
+		List<Cafe> findCafes = cafeRepository.findAllBySearch(latitude, longitude);
 
 		return findCafes.stream()
 			.filter(findCafe -> findCafe.getName().contains(cafeName))

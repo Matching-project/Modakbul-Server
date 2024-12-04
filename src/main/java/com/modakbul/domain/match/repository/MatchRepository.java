@@ -1,5 +1,6 @@
 package com.modakbul.domain.match.repository;
 
+import com.modakbul.domain.user.entity.User;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -62,4 +63,6 @@ public interface MatchRepository extends JpaRepository<Matches, Long> {
 	void deleteAllByBoard(Board board);
 
 	void deleteAllById(Long id);
+
+	void deleteAllBySender(User user);
 }

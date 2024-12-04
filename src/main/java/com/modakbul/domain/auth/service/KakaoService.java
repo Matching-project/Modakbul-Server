@@ -1,7 +1,12 @@
 package com.modakbul.domain.auth.service;
 
+import com.modakbul.domain.chat.chatroom.entity.ChatRoom;
+import com.modakbul.domain.chat.chatroom.repository.ChatRoomRepository;
+import com.modakbul.domain.chat.chatroom.repository.UserChatRoomRepository;
+import com.modakbul.domain.report.repository.ChatReportRepository;
 import java.util.List;
 
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -65,26 +70,29 @@ public class KakaoService {
 	private final ReviewRepository reviewRepository;
 	private final UserReportRepository userReportRepository;
 	private final NotificationRepository notificationRepository;
+	private final ChatRoomRepository chatRoomRepository;
+	private final ChatReportRepository chatReportRepository;
+	private final UserChatRoomRepository userChatRoomRepository;
 
 	@Transactional
 	public ResponseEntity<BaseResponse<AuthResDto>> login(KakaoLoginReqDto request) {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		User findUser = userRepository.findByProvideIdAndProvider(request.getEmail(),
-			Provider.KAKAO).orElse(null);
+				Provider.KAKAO).orElse(null);
 
 		if (findUser == null) {
 			AuthResDto authResDto = AuthResDto.builder().userId(-1L).build();
 			return new ResponseEntity<>(new BaseResponse<>(BaseResponseStatus.USER_NOT_EXIST, authResDto),
-				httpHeaders, HttpStatus.OK);
+					httpHeaders, HttpStatus.OK);
 		} else if ((findUser.getUserStatus()).equals(UserStatus.DELETED)) {
 			throw new BaseException(BaseResponseStatus.WITHDRAWAL_USER);
 		} else {
 			findUser.updateFcmToken(request.getFcm());
 
 			String accessToken = jwtProvider.createAccessToken(findUser.getProvider(), findUser.getProvideId(),
-				findUser.getNickname());
+					findUser.getNickname());
 			String refreshToken = jwtProvider.createRefreshToken(findUser.getProvider(), findUser.getProvideId(),
-				findUser.getNickname());
+					findUser.getNickname());
 
 			RefreshToken addRefreshToken = new RefreshToken(findUser.getId(), refreshToken, refreshTokenExpirationTime);
 			refreshTokenRepository.save(addRefreshToken);
@@ -94,52 +102,52 @@ public class KakaoService {
 
 			AuthResDto authResDto = AuthResDto.builder().userId(findUser.getId()).build();
 			return new ResponseEntity<>(new BaseResponse<>(BaseResponseStatus.LOGIN_SUCCESS, authResDto),
-				httpHeaders, HttpStatus.OK);
+					httpHeaders, HttpStatus.OK);
 		}
 	}
 
 	public ResponseEntity<BaseResponse<AuthResDto>> signUp(MultipartFile image, KakaoSignUpReqDto request) {
 		User findUser = userRepository.findByProvideIdAndProvider(request.getEmail(),
-			Provider.KAKAO).orElse(null);
+				Provider.KAKAO).orElse(null);
 
 		if (findUser != null) {
 			throw new BaseException(BaseResponseStatus.USER_EXIST);
 		}
 
 		String accessToken = jwtProvider.createAccessToken(Provider.KAKAO, request.getEmail(),
-			request.getNickname());
+				request.getNickname());
 		String refreshToken = jwtProvider.createRefreshToken(Provider.KAKAO, request.getEmail(),
-			request.getNickname());
+				request.getNickname());
 
 		User addUser = User.builder()
-			.provideId(request.getEmail())
-			.provider(Provider.KAKAO)
-			.birth(request.getBirth())
-			.name(request.getName())
-			.nickname(request.getNickname())
-			.gender(request.getGender())
-			.userJob(request.getJob())
-			.isVisible(true)
-			.image(s3ImageService.upload(image))
-			.userRole(UserRole.NORMAL)
-			.userStatus(UserStatus.ACTIVE)
-			.fcmToken(request.getFcm())
-			.build();
+				.provideId(request.getEmail())
+				.provider(Provider.KAKAO)
+				.birth(request.getBirth())
+				.name(request.getName())
+				.nickname(request.getNickname())
+				.gender(request.getGender())
+				.userJob(request.getJob())
+				.isVisible(true)
+				.image(s3ImageService.upload(image))
+				.userRole(UserRole.NORMAL)
+				.userStatus(UserStatus.ACTIVE)
+				.fcmToken(request.getFcm())
+				.build();
 		userRepository.save(addUser);
 
 		request.getCategories().forEach(categoryName ->
-			categoryRepository.findByCategoryName(categoryName)
-				.ifPresentOrElse(
-					category -> userCategoryRepository.save(
-						UserCategory.builder()
-							.user(addUser)
-							.category(category)
-							.build()
-					),
-					() -> {
-						throw new BaseException(BaseResponseStatus.CATEGORY_NOT_EXIST);
-					}
-				)
+				categoryRepository.findByCategoryName(categoryName)
+						.ifPresentOrElse(
+								category -> userCategoryRepository.save(
+										UserCategory.builder()
+												.user(addUser)
+												.category(category)
+												.build()
+								),
+								() -> {
+									throw new BaseException(BaseResponseStatus.CATEGORY_NOT_EXIST);
+								}
+						)
 		);
 
 		RefreshToken addRefreshToken = new RefreshToken(addUser.getId(), refreshToken, refreshTokenExpirationTime);
@@ -151,32 +159,51 @@ public class KakaoService {
 
 		AuthResDto authResDto = AuthResDto.builder().userId(addUser.getId()).build();
 		return new ResponseEntity<>(new BaseResponse<>(BaseResponseStatus.REGISTER_SUCCESS, authResDto),
-			httpHeaders, HttpStatus.OK);
+				httpHeaders, HttpStatus.OK);
 	}
 
 /*	public void withdrawal(User user) {
 		user.updateUserStatus(UserStatus.DELETED);
 		userRepository.save(user);
+
+		Long expiration = jwtProvider.getExpiration(accessToken);
+
+		refreshTokenRepository.deleteById(user.getId());
+		logoutTokenRepository.save(new LogoutToken(accessToken, expiration / 1000));
 	}*/
 
 	@Transactional
 	public void withdrawal(User user, String accessToken) {
 		List<Board> findBoards = boardRepository.findAllByUser(user);
-		findBoards.forEach(matchRepository::deleteAllByBoard);
+		List<ChatRoom> findChatRooms = findBoards.stream()
+				.flatMap(findBoard -> chatRoomRepository.findAllByBoard(findBoard).stream())
+				.toList();
 
-		List<Matches> findMatches = matchRepository.findAllBySenderId(user.getId());
-		if (findMatches != null) {
-			findMatches.forEach(findMatch -> {
-				matchRepository.deleteAllById(findMatch.getId());
-			});
-		}
+		//chatRoom를 참조하는 데이터 삭제
+		findChatRooms.forEach(chatRoom -> {
+			userChatRoomRepository.deleteAllByChatRoom(chatRoom);
+			chatReportRepository.deleteAllByChatRoom(chatRoom);
+		});
 
+		chatReportRepository.deleteAllByReported(user);
+		chatReportRepository.deleteAllByReporter(user);
+
+		userChatRoomRepository.deleteAllByUser(user);
+
+		findBoards.forEach(board -> {
+			chatRoomRepository.deleteAllByBoard(board);
+			matchRepository.deleteAllByBoard(board);
+			notificationRepository.deleteAllByBoard(board);
+		});
+
+		matchRepository.deleteAllBySender(user);
+		notificationRepository.deleteAllBySender(user);
+		notificationRepository.deleteAllByReceiver(user);
 		boardRepository.deleteAllByUser(user);
+
 		informationRepository.deleteAllByUser(user);
 		blockRepository.deleteAllByBlockedId(user);
 		blockRepository.deleteAllByBlockerId(user);
-		notificationRepository.deleteAllBySender(user);
-		notificationRepository.deleteAllByReceiver(user);
 		reviewRepository.deleteAllByUser(user);
 		userReportRepository.deleteAllByReported(user);
 		userReportRepository.deleteAllByReporter(user);
