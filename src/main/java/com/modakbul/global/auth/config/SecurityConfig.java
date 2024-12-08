@@ -23,25 +23,26 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http
-			.csrf((csrfConfig) -> csrfConfig.disable())
-			.httpBasic(httpBasic -> httpBasic.disable())
-			.cors(cors -> cors.disable())
-			.sessionManagement(
-				sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-			)
-			.formLogin(formLogin -> formLogin.disable())
-			.logout(logout -> logout.disable())
-			.headers(headers -> headers
-				.frameOptions(frameOptions -> frameOptions.disable())
-			)
-			.authorizeHttpRequests((authorizeRequests) -> authorizeRequests
-				.requestMatchers("/users/register/**", "/users/login/**", "/token/**", "/users", "/css/**",
-					"/images/**",
-					"/js/**", "/favicon.ico", "/error", "/stomp/**", "/notifications/**", "/cafes/**").permitAll()
-				.anyRequest().authenticated()
-			)
-			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-			.addFilterBefore(jwtExceptionFilter, JwtAuthenticationFilter.class);
+				.csrf((csrfConfig) -> csrfConfig.disable())
+				.httpBasic(httpBasic -> httpBasic.disable())
+				.cors(cors -> cors.disable())
+				.sessionManagement(
+						sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+				)
+				.formLogin(formLogin -> formLogin.disable())
+				.logout(logout -> logout.disable())
+				.headers(headers -> headers
+						.frameOptions(frameOptions -> frameOptions.disable())
+				)
+				.authorizeHttpRequests((authorizeRequests) -> authorizeRequests
+						.requestMatchers("/users/register/**", "/users/login/**", "/token/**", "/users", "/css/**",
+								"/images/**", "/users/profile/**",
+								"/js/**", "/favicon.ico", "/error", "/stomp/**", "/notifications/**", "/cafes/**")
+						.permitAll()
+						.anyRequest().authenticated()
+				)
+				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+				.addFilterBefore(jwtExceptionFilter, JwtAuthenticationFilter.class);
 		return http.build();
 	}
 }

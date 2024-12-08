@@ -122,7 +122,6 @@ public class KakaoService {
 		User addUser = User.builder()
 				.provideId(request.getEmail())
 				.provider(Provider.KAKAO)
-				.birth(request.getBirth())
 				.name(request.getName())
 				.nickname(request.getNickname())
 				.gender(request.getGender())
