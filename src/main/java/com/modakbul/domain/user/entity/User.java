@@ -32,9 +32,6 @@ public class User extends BaseEntity {
 	@Column(name = "user_id")
 	private Long id;
 
-	/*@Column(nullable = false)
-	private String email;*/
-
 	@Column(nullable = false)
 	private String provideId;
 
@@ -44,9 +41,6 @@ public class User extends BaseEntity {
 
 	@Column(nullable = false, length = 30)
 	private String name;
-
-	@Column(nullable = false, length = 10)
-	private String birth;
 
 	@Column(nullable = false, length = 15, unique = true)
 	private String nickname;

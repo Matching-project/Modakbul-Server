@@ -22,7 +22,6 @@ public class AppleSignUpReqDto {
 	private String authorizationCode;
 	private String name;
 	private String nickname;
-	private String birth;
 	private Gender gender;
 	@Enumerated(EnumType.STRING)
 	private List<CategoryName> categories;

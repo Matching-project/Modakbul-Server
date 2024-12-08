@@ -22,7 +22,6 @@ public class KakaoSignUpReqDto {
 	private String email;
 	private String name;
 	private String nickname;
-	private String birth;
 	private Gender gender;
 	@Enumerated(EnumType.STRING)
 	private List<CategoryName> categories;

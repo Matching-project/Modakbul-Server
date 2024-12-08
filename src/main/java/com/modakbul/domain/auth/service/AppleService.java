@@ -180,7 +180,6 @@ public class AppleService {
 		User addUser = User.builder()
 				.provideId(provideId)
 				.provider(provider)
-				.birth(request.getBirth())
 				.name(request.getName())
 				.nickname(request.getNickname())
 				.gender(request.getGender())
