@@ -1,5 +1,6 @@
 package com.modakbul.domain.cafe.entity;
 
+import jakarta.persistence.EnumType;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 
@@ -20,9 +21,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @Embeddable
 public class OpeningHour extends BaseEntity {
-	@Enumerated
+	@Enumerated(EnumType.STRING)
 	private DayOfWeek dayOfWeek; //요일
 
+	@Enumerated(EnumType.STRING)
 	private OpeningStatus openingStatus; // 오픈, 마감
 
 	private LocalTime openedAt; // 오픈 시간
